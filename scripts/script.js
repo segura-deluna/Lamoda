@@ -1,5 +1,7 @@
 // * Choosing a city ==============================================
 const headerCityButton = document.querySelector('.header__city-button');
+const cartListGoods = document.querySelector('.cart__list-goods');
+const cartTotalCost = document.querySelector('.cart__total-cost');
 
 let hash = location.hash.substring(1); // hash of page
 
@@ -9,6 +11,47 @@ headerCityButton.addEventListener('click', () => {
   headerCityButton.textContent = city;
   localStorage.setItem('lomoda-local', city);
 });
+
+// * Render cart ===================================================
+const renderCart = () => {
+  cartListGoods.textContent = '';
+  const cartItems = getLocalStorage();
+  let totalPrice = 0;
+
+  cartItems.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${item.brand} ${item.name}</td>
+      ${item.color ? `<td>${item.color}</td>` : '<td>-</td>'}
+      ${item.size ? `<td>${item.size}</td>` : '<td>-</td>'}
+      <td>${item.cost} &#8381;</td>
+      <td><button class="btn-delete" data-id="${item.id}">&times;</button></td>
+    `;
+
+    totalPrice += item.cost;
+    cartListGoods.append(tr);
+  });
+
+  cartTotalCost.textContent = totalPrice + ' ₽';
+};
+
+const daleteItemCart = (id) => {
+  const cartItems = getLocalStorage();
+  const newCartItems = cartItems.filter((item) => item.id !== id);
+  setLocalStorage(newCartItems);
+};
+
+cartListGoods.addEventListener('click', (e) => {
+  if (e.target.matches('.btn-delete')) {
+    daleteItemCart(e.target.dataset.id);
+    renderCart();
+  }
+});
+
+// * Parsing data ==================================================
+const getLocalStorage = () => JSON?.parse(localStorage.getItem('cart-lomoda')) || [];
+const setLocalStorage = (data) => localStorage.setItem('cart-lomoda', JSON.stringify(data));
 
 // * Scroll blocked ================================================
 const disableScroll = () => {
@@ -39,6 +82,7 @@ const cartOverlay = document.querySelector('.cart-overlay');
 const cartModalOpen = () => {
   cartOverlay.classList.add('cart-overlay-open');
   disableScroll();
+  renderCart();
 };
 
 const cartModalClose = () => {
@@ -158,7 +202,9 @@ try {
   const generateList = (data) =>
     data.reduce((html, item, i) => html + `<li class="card-good__select-item" data-id="${i}">${item}</li>`, '');
 
-  const renderCardGood = ([{ brand, name, cost, color, sizes, photo }]) => {
+  const renderCardGood = ([{ id, brand, name, cost, color, sizes, photo }]) => {
+    const data = { brand, name, cost, id };
+
     cardGoodImage.src = `goods-image/${photo}`;
     cardGoodImage.alt = `${photo} ${name}`;
     cardGoodBrand.textContent = brand;
@@ -178,6 +224,15 @@ try {
     } else {
       cardGoodSizes.style.display = 'none';
     }
+
+    cardGoodBuy.addEventListener('click', () => {
+      if (color) data.color = cardGoodColor.textContent;
+      if (sizes) data.size = cardGoodSizes.textContent;
+
+      const cardData = getLocalStorage();
+      cardData.push(data);
+      setLocalStorage(cardData);
+    });
   };
 
   cardGoodSelectWrapper.forEach((item) => {
