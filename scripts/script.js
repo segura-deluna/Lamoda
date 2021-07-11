@@ -225,9 +225,23 @@ try {
       cardGoodSizes.style.display = 'none';
     }
 
+    if (getLocalStorage().some((item) => item.id === id)) {
+      cardGoodBuy.classList.add('delete');
+      cardGoodBuy.textContent = 'Удалить из корзины';
+    }
+
     cardGoodBuy.addEventListener('click', () => {
+      if (cardGoodBuy.classList.contains('delete')) {
+        daleteItemCart(id);
+        cardGoodBuy.classList.remove('delete');
+        cardGoodBuy.textContent = 'Добавить в корзину';
+        return;
+      }
       if (color) data.color = cardGoodColor.textContent;
       if (sizes) data.size = cardGoodSizes.textContent;
+
+      cardGoodBuy.classList.add('delete');
+      cardGoodBuy.textContent = 'Удалить из корзины';
 
       const cardData = getLocalStorage();
       cardData.push(data);
